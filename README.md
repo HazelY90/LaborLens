@@ -30,11 +30,11 @@ cost-efficient. Generative AI is used where semantic interpretation is needed:
 extracting employment policies from PDF reports and analysing those policies
 alongside verified statistical results.
 
-The final indicators, dimensions, policy fields, analytical operations, and
-database schema will be determined after the available Irish government data
-and reports have been examined. The architecture will follow the sources that
-can actually be retrieved and validated rather than assuming a fixed set of
-fields in advance.
+The initial statistical scope is ALF01, MUM01, QLF50, and selected QLF59
+categories for 2019–2025. EHQ03 is excluded following the missing-value review.
+The [Schema Design](docs/schema_design.md) defines four semantic fact tables,
+backend enum dimensions, a policy table, and a shared source-file registry.
+Combined analytical operations still require further design.
 
 ## Project Plan
 
@@ -110,9 +110,11 @@ deliverables, and completion criteria.
 
 The first usable release is expected to include:
 
-- A small set of official Irish employment datasets available as CSV.
+- Four official Irish employment datasets available as CSV, with selected
+  indicators and categories.
 - A small collection of official PDF reports containing employment policies.
-- Repeatable CSV ingestion with validation, normalisation, and upserts.
+- Repeatable CSV ingestion with validation, enum mapping, and transactional
+  snapshot replacement.
 - AI-assisted policy extraction with source references and validation.
 - Deterministic statistical calculations over the employment data.
 - AI-generated analysis grounded in selected statistics and policy records.
@@ -123,3 +125,40 @@ Authentication is supporting functionality rather than the main focus. The
 engineering depth of LaborLens should come primarily from reliable source
 processing, policy extraction, traceable AI analysis, statistical modelling,
 and interactive visualisation.
+
+## Database Migrations
+
+Flyway migrations are in `backend/src/main/resources/db/migration`:
+
+- `V1__create_schema.sql`: source registry with file checksums, four statistical
+  tables, policies and per-file job execution history,
+  including indexes, category checks, measure bounds and the policy source key.
+
+Flyway leaves `source_file` empty. Job workflows, source registration, external
+data directory configuration and access requirements are documented in
+[Data Ingestion Jobs](docs/data_ingestion.md). Job implementation remains pending.
+
+Use MySQL 8.0.16 or later. Start the backend with `backend/` as the working
+directory so Spring reads its untracked `.env` as a properties file. Variable
+names are listed in `backend/env.txt`. Flyway uses `flyway.url`, `flyway.user`
+and `flyway.password`, falling back to `DB_URL`, `DB_USERNAME` and `DB_PASSWORD`
+when those properties are absent. Omit unused overrides rather than leaving
+URL/user overrides blank. Keep the migration and application accounts on the
+same database, with schema-change privileges granted to the migration account.
+
+Application startup applies pending migrations before Hibernate validation.
+Automatic baseline and database cleaning are disabled. Do not edit a migration
+that has already been applied; add a new version instead. MySQL DDL is not fully
+transactional, so inspect any failed migration before attempting recovery.
+
+With Docker running and the MySQL 8.4 image available, run the isolated migration
+test from `backend/`:
+
+```bash
+./mvnw -Dtest=FlywayMigrationTests test
+```
+
+The test migrates a disposable database, checks repeat execution, an empty source registry, job-style source fixtures,
+valid observations and rejected invalid values, and verifies the policy foreign
+key. It is skipped when Docker is unavailable; a skipped test does not verify
+SQL execution. The test does not connect to the database configured in `.env`.

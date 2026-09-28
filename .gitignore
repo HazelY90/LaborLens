@@ -1,5 +1,5 @@
 notes/
 .env
 .DS_Store
-data/
 AGENTS.md
+data/policies/tmp/
