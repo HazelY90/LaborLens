@@ -4,8 +4,8 @@
 
 The database stores the latest validated 2019–2025 statistical snapshot in four
 fact tables, extracted policies in `policy`, validated source files in
-`source_file`, and execution history in `job_run`. Each statistical fact table
-has a fixed measure and unit.
+`source_file`, execution history in `job_run`, and accounts in `users` (V2).
+Each statistical fact table has a fixed measure and unit.
 
 | Source file | Fact table | Measure column | Unit |
 | --- | --- | --- | --- |
@@ -16,12 +16,12 @@ has a fixed measure and unit.
 
 Only valid, non-missing observations are stored. This keeps fact tables focused
 on queryable measurements; original CSV files and import logs preserve missing
-source records. See [CSV Ingestion Rules](data_ingestion.md#csv-ingestion-rules).
+source records. See [CSV Ingestion Rules](data_ingestion.md#processing).
 
 Classification values are Java enum names persisted as strings. Each enum
 constant has one additional field, `label`, for its English display name. The
-backend supplies `{value, label}` options to the frontend; the frontend displays
-`label` and submits `value`. Display labels are not stored in fact or policy rows.
+backend supplies `{code, label}` options to the frontend; the frontend displays
+`label` and submits `code`. Display labels are not stored in fact or policy rows.
 Ordering, defaults, visibility, aggregate relationships and dataset-specific
 allowed values remain in application code, not enum fields. Raw CSO codes and
 labels remain in source files and ingestion mappings.
@@ -144,7 +144,8 @@ INDEX idx_count_sector (economic_sector, year, quarter)
 ```
 
 Defaults: `ALL` citizenship and sector. The measure covers employed persons
-aged 15 and over. The local usable time series starts at 2021Q1.
+aged 15 and over. Missing source values are omitted from storage; the API still
+returns every supported quarter from 2019 through 2025.
 
 ## 4. Enum Labels and Source Mappings
 
@@ -265,10 +266,11 @@ Use `ALL` as the default and import the published aggregate values directly.
   overlap their components; `EXCLUDING_IRELAND` includes `OUTSIDE_EU_UK`, and
   `SERVICES` includes `INFORMATION_COMMUNICATION`. Do not stack overlapping
   groups or reconstruct totals from the reduced selection.
-- Determine filter availability by checking for matching stored rows. An absent
-  observation means unavailable data, not zero. APIs fill missing periods with
-  `null` on the requested time axis so charts show gaps.
-- Return the fixed unit and source attribution alongside each query result.
+- Metadata returns fixed dataset-specific enum allowlists, independent of stored rows.
+  An absent observation means unavailable data, not zero. APIs fill missing periods
+  with `null`; trend lines connect available points without markers at missing periods.
+- Statistical responses include dataset identity and unit. Policy responses include
+  source identity and URL; statistical responses do not contain source-file metadata.
 
 ## 6. Policy Table
 
@@ -301,7 +303,7 @@ INDEX idx_policy_source (source_file_id)
 Validate that `source_file_id` identifies an approved PDF mapped to `policy`.
 Keep similar actions from different reports as separate source-specific rows.
 Refresh transactions and source evidence retention follow
-[PDF Ingestion Rules](data_ingestion.md#pdf-ingestion-rules); evidence artifacts
+[PDF Ingestion Rules](data_ingestion.md#processing); evidence artifacts
 remain outside this table.
 
 ### `PolicyType`
@@ -326,9 +328,7 @@ belongs to `ECONOMIC_MIGRATION`; domestic training belongs to
 independently supported actions, such as flexible work and female participation.
 Exclude internal departmental HR and unsupported generic aspirations.
 
-The AI-analysis schema remains to be designed. Saved analyses must preserve
-actual statistical inputs, policy evidence and source versions, because
-refreshes replace rows and may change their IDs.
+There is no saved-analysis table or combined AI-analysis API.
 
 
 ## 7. Job Run Table
@@ -365,7 +365,7 @@ Indexes are not unique: a retry or forced run retains its own history. The
 recorded checksum is a snapshot and must not change when the source is refreshed.
 The application verifies filename/source consistency. Run transitions, duplicate
 processing checks and transaction boundaries are defined in
-[Data Ingestion Jobs](data_ingestion.md#run-history-and-retries).
+[Data Ingestion Jobs](data_ingestion.md#runs-and-files).
 
 ### `JobType`
 
@@ -385,3 +385,19 @@ processing checks and transaction boundaries are defined in
 | `SKIPPED` | Skipped |
 
 These enums follow the same name-and-label-only design as the other enums.
+
+## 8. User Table
+
+V2 creates `users` for email/password authentication without roles.
+
+| Column | MySQL type | Constraint or purpose |
+| --- | --- | --- |
+| `id` | `BIGINT UNSIGNED AUTO_INCREMENT` | Primary key |
+| `email` | `VARCHAR(254)` | Required, ASCII, case-insensitive unique |
+| `username` | `VARCHAR(50)` | Required display name; not unique |
+| `password_hash` | `VARCHAR(60)` | Required BCrypt hash |
+| `token_version` | `INT` | Required, nonnegative, default `0` |
+| `created_at` | `DATETIME(6)` | Required creation time |
+
+No tokens or token hashes are stored. Password changes and logout increment
+`token_version`; deletion removes only the account. See [Authentication](authentication.md).

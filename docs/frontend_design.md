@@ -1,68 +1,70 @@
 # Frontend Design
 
-Confirm page design and data requirements before designing backend APIs and implementing features.
+Current implementation: Next.js, React and TypeScript. All interface text is English.
 
-## Access and navigation
+## Pages and account access
 
-- Visitors can access only the homepage, which introduces the project and provides a login entry. Statistical and policy data require authentication.
-- After login, show five top navigation tabs. Open Annual Employment Rate by default.
-- Data APIs must enforce authentication alongside page access controls.
+- A public homepage and five authenticated data pages share one header.
+- Page introductions are left-aligned. The theme and chart palette come from `utils/colors.json`.
+- Login opens Annual Employment Rate. The header then shows five data links and an account menu.
+- Registration, login, username changes, password changes and account deletion use dialogs. The account menu also provides logout.
+- Registration requires a subsequent login. Password changes sign the user out and reopen login.
+- Protected URLs show a login prompt without loading data when signed out. Backend data APIs also enforce authentication.
 
-| Page | Views | Dimensions |
+| Page | Charts | Dimensions |
 | --- | --- | --- |
 | Annual Employment Rate | Trend and annual comparison | Age, sex, education, region |
-| Monthly Unemployment Rate | Trend | Age, sex |
+| Monthly Unemployment Rate | Trend only | Age, sex |
 | Quarterly Employment Rate | Trend and quarterly comparison | Age, sex, education |
 | Quarterly Employment Count | Trend and quarterly comparison | Citizenship, economic sector |
 | Policies | Category tabs and timeline | Policy type, strategy period |
 
-## Trend view
+## Statistical layout
 
-- Display the full imported time range, with annual, monthly or quarterly ticks as appropriate.
-- One filter card produces exactly one line. Each dimension in a card permits one value only.
-- Start with one card using overall values. Users add separate cards to compare other combinations, and can edit or remove cards.
-- Match each card's color to its line and legend. Label each line with its selected dimensions.
-- Show circular markers at every available observation, including zero. Tooltips show the period, selected dimensions and value.
-- Keep missing periods on the time axis, omit their markers and connect the surrounding available points directly. For example, missing 2024 data connects 2023 to 2025.
-- Show a no-data state for a card with no observations. Do not sum or average selected series.
+- Trend and comparison appear together: trend above, comparison below. A sticky left navigation jumps between sections.
+- Series filters sit to the right of the trend chart in a height-limited, internally scrolling panel.
+- The comparison area matches the trend chart width, leaving the space below the series panel empty.
+- Comparison cards appear two per row on wide screens. Narrow screens stack the navigation, chart, filters and comparison cards.
 
-Example annual comparison:
+## Trends
 
-| Card | Age | Sex | Education | Region |
-| --- | --- | --- | --- | --- |
-| Overall | ALL | ALL | ALL | IRELAND |
-| Comparison 1 | AGE_30_34 | FEMALE | ALL | IRELAND |
-| Comparison 2 | AGE_35_39 | FEMALE | ALL | IRELAND |
+- Each single-select filter card produces one line. Start with overall values and allow up to five cards; at least one remains.
+- Each card uses a distinct colour matching its line and legend. Labels identify all selected dimensions.
+- Display all 2019–2025 period slots: annual, monthly or quarterly. Wide charts scroll horizontally.
+- SVG polylines connect available observations across missing periods. Circular markers include zero and exclude missing observations.
+- Hovering or focusing a point shows its period, filters and value. An expandable data table also exposes the observations.
+- Empty selections show a no-data message. Do not aggregate series or replace missing values with zero.
 
-These three cards produce three independent lines.
+## Comparisons
 
-## Bar comparison view
+- Select a year; quarterly pages have a separate quarter selector. The initial selection is the latest supported year and Q4 where applicable.
+- Vary one dimension per chart and fix every other dimension to its overall value. Users cannot change these fixed filters.
+- Show four charts for annual employment, three for quarterly employment rate and two for quarterly employment count.
+- Missing observations retain an outlined empty bar labelled `Data unavailable`; true zero displays `0`.
+- Age and Economic Sector fit every bar within the card. Age category labels rotate 45 degrees; sector labels wrap horizontally. Values above bars are horizontal.
+- Other category charts can scroll horizontally. Bars are separate, not stacked, because categories can overlap.
 
-- Annual data: select one year. Quarterly data: select year and quarter separately.
-- Display one comparison chart per dimension for the selected period: four for annual employment rate, three for quarterly employment rate and two for quarterly employment count.
-- In each chart, vary only the compared dimension. Fix all other dimensions to their overall values; users cannot change those filters.
-- Preserve each category's position when data is missing. Display an empty bar placeholder labelled `Data unavailable`, distinct from a true zero.
-- Use separate bars, not stacked bars: some categories overlap or contain other categories.
+Overall defaults are `IRELAND` for annual region, `AGE_15_74` for monthly age,
+and `ALL` for other dimensions. Rates use `%`; counts use `thousand persons`.
 
-Overall values use the source definitions: `IRELAND` for annual region, `AGE_15_74` for monthly age, and `ALL` for other supported dimensions. Display readable labels rather than enum codes. Employment and unemployment rates use `%`; employment counts use `thousand persons`.
+## Policies
 
-## Policy view
+- Horizontal tabs select one of the five policy categories.
+- A left timeline and right policy cards occupy 80% of the content width, centered; narrow screens use the full width.
+- Group by strategy start/end years and source, ordered chronologically. Keep records from distinct sources separate.
+- Cards display policy text without filenames or page citations. List distinct source files for the selected category, with links, at the bottom.
+- Dates identify strategy periods, not publication or implementation dates. Categories without policies show an empty state.
 
-- Show horizontal category tabs: Economic Migration, Employment Development, Skills Development, Working Conditions and Employment Inclusion.
-- Place a timeline on the left and all policies in the selected category on the right.
-- Group policies by source strategy period; order by start year, then end year, ascending.
-- Display each policy's text, strategy period, source file and cited page. Retain distinct sources where strategy periods overlap.
-- Label dates as strategy periods, not policy publication or implementation dates. Show an empty state when a category has no policies.
+## Data and code structure
 
-## Data requirements
+- `app`: routes and layouts; `contexts`: authentication and shared metadata;
+  `hooks`: session access and cancellable data loading; `components`: shared UI;
+  `features`: home, account, statistics and policy components; `services`: API calls;
+  `utils`: contracts, chart helpers, routes and colours.
+- Metadata supplies dataset-specific `{code,label}` options, defaults, years and units. These are fixed allowlists, not database-derived availability.
+- The browser API client keeps Access JWTs in memory, includes cookies, and authenticates by default. `auth: false` disables bearer authentication and automatic refresh.
+- Concurrent refreshes share one request; protected requests retry at most once after a 401. Loading failures offer retry, and obsolete data requests are cancelled.
+- The API still returns optional policy page citations, but the UI does not display them.
 
-| View | Required data |
-| --- | --- |
-| Shared statistics controls | Supported dimensions, allowed values, readable labels, available periods, overall defaults and unit |
-| Trend | One time series per filter card, including its selected dimensions and period/value observations |
-| Bar comparison | Category/value observations for each dimension at the selected period, with other dimensions fixed to overall values |
-| Policies | Category, strategy start/end years, policy text, source identity and cited page |
-
-Represent missing statistical values as `null`, never zero. Preserve complete period/category slots for chart rendering. Policy page citations currently reside in extraction artifacts; their delivery must be addressed during API design.
-
-API routes and response contracts are the next design step; this document does not define their implementation.
+Contracts: [Backend Data API](backend_api.md) and [Authentication](authentication.md).
+Configuration and commands: [Frontend README](../frontend/README.md).

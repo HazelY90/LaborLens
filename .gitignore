@@ -1,5 +1,6 @@
 notes/
 .env
+.env.local
 .DS_Store
 AGENTS.md
 data/policies/tmp/

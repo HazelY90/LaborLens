@@ -28,7 +28,8 @@ Source filenames, URLs and table mappings are defined in `CsvSource` and `PdfSou
 
 - **CSV:** select configured statistics/categories for 2019–2025, map labels to
   enums, skip blank values and retain zero. Reject invalid values, unknown mappings,
-  duplicate keys, missing periods and empty results. Replace each table in one transaction.
+  duplicate keys, incomplete source period coverage and empty results.
+  Period coverage includes rows with missing values; individual observations may be absent. Replace each table in one transaction.
 - **PDF:** `PolicyAi` sends the original PDF as a Base64 attachment, source filename,
   strategy period, and both JSON configurations from `policyExtraction/promts/`:
   `prompt.json` and `outputStructure.json`. It validates the returned fields,
@@ -53,7 +54,8 @@ Source filenames, URLs and table mappings are defined in `CsvSource` and `PdfSou
 
 ## Run
 
-From `backend/`:
+Run Flyway migrations first as shown in the [Backend README](../backend/README.md),
+then run from `backend/`:
 
 ```sh
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=ingestion

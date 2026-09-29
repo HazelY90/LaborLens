@@ -3,11 +3,11 @@
 ## Scope
 
 LaborLens analyses Irish employment statistics and employment-policy evidence
-for **2019–2025**. CSO CSV data is parsed and calculated deterministically. AI
-extracts policy meaning from official PDFs and interprets validated evidence.
+for **2019–2025**. CSO CSV data is parsed deterministically and published observations are stored directly.
+AI extracts policy records from complete official PDFs.
 
 See [Schema Design](schema_design.md) for storage and category mappings, and
-[Development Plan](development-plan.md) for implementation milestones.
+[Development Plan](development-plan.md) for the implemented scope.
 
 ## CSO Statistics
 
@@ -26,15 +26,15 @@ https://ws.cso.ie/public/api.restful/PxStat.Data.Cube_API.ReadDataset/{TABLE_ID}
 
 QLF59 uses only the four citizenship groups and five sectors listed in
 [Enum Labels and Source Mappings](schema_design.md#4-enum-labels-and-source-mappings).
-Its local 2019–2020 values are all missing, so stored observations begin at
-2021Q1. EHQ03 is excluded because 87.30% of its local 2019–2025 values are missing.
+Missing observations are omitted during import and returned as `null` by the
+query API. Only the four datasets above are imported.
 
 Reference links: [CSO portal](https://data.cso.ie/),
 [PxStat guide](https://www.cso.ie/en/databases/userguides/pxstatuserguide/),
 [discovery catalogue](https://data.gov.ie/).
 
-CSV import rules and local reference counts are documented in
-[CSV Ingestion Rules](data_ingestion.md#csv-ingestion-rules).
+CSV import rules are documented in
+[Data Ingestion](data_ingestion.md#processing).
 
 ## Policy Reports
 
@@ -52,42 +52,25 @@ The approved direct PDF URLs are:
 
 Strategy overlap identifies relevant reports, not verified implementation dates.
 
-See [PDF Ingestion Rules](data_ingestion.md#pdf-ingestion-rules) for extraction,
+See [PDF Processing](data_ingestion.md#processing) for extraction,
 validation, evidence retention and refresh behaviour.
 
 ## Enum Display Contract
 
-The backend provides enum options as `{value, label}` objects for statistical
-filters and policy types. `value` is the stable enum name used in stored records,
+The backend provides enum options as `{code, label}` objects for statistical
+filters and policy types. `code` is the stable enum name used in stored records,
 requests and responses; `label` is the English display name held by the enum.
 The frontend uses backend-provided labels rather than maintaining its own map.
 For example:
 
 ```json
-{"value": "ECONOMIC_MIGRATION", "label": "Economic Migration"}
+{"code": "ECONOMIC_MIGRATION", "label": "Economic Migration"}
 ```
 
 Only `label` is an additional enum field. Ordering, defaults, visibility,
 aggregate relationships and dataset-specific allowed values stay in application
-logic. Option availability must still reflect the dataset and stored data.
-
-## Combined Analysis Contract
-
-Calculate numeric results in Java or SQL. Give AI only those verified results,
-validated policy evidence, an explicit period, and a bounded analytical question.
-Validate all citations against the supplied evidence; generated findings must
-not invent measurements or claim policy causation from statistical association.
-
-Each saved analysis must retain:
-
-- Findings, limitations, evidence references, and validation status.
-- Actual statistical input values, semantic dimension keys, calculation
-  definition, source checksums, and mapping version.
-- Policy and document references, model/settings, prompt/schema versions, and
-  generation timestamp.
-
-Preserving input values is necessary because snapshot refreshes can replace
-fact-row IDs. The detailed analysis schema remains to be finalised.
+logic. Metadata uses fixed dataset-specific allowlists, not distinct values queried from stored rows.
+Supported selections may have no observations.
 
 ## Source Verification
 

@@ -41,12 +41,12 @@ Homepage, registration and login are public. Data queries, metadata and account 
 
 ## Runtime and request contract
 
-V2 creates `users` on the next normal Flyway migration. Configure `JWT_SECRET_KEY`
+The V2 Flyway migration creates `users`. Configure `JWT_SECRET_KEY`
 with at least 32 UTF-8 bytes of random secret material; it is used directly as the
 HS256 signing key, not Base64-decoded. Never commit it.
-`AUTH_COOKIE_SECURE` defaults to `true`; set `false` only for local HTTP development.
+`AUTH_COOKIE_SECURE` defaults to `false` for HTTP. Set it to `true` when using HTTPS.
 `AUTH_ALLOWED_ORIGINS` is an exact comma-separated origin allowlist, defaulting to
-`http://localhost:5173,http://localhost:8080`. Refresh/logout require an allowed
+`http://localhost:3000,http://localhost:8080`. Refresh/logout require an allowed
 `Origin` header, including in Postman. Browser calls use `credentials: "include"`.
 
 JSON request fields:
