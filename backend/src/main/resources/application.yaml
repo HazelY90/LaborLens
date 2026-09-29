@@ -25,14 +25,19 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: validate
-    open-in-view: true
+    # Authentication and account mutations must read fresh transaction state.
+    open-in-view: false
 
-  jwt:
-    secret: ${JWT_SECRET_KEY}
-    accessTokenExpiration: 1800 # 0.5h
-    refreshTokenExpiration: 604800 # 7 d
 
 app:
+  auth:
+    jwt-secret: ${JWT_SECRET_KEY}
+    issuer: laborlens
+    access-seconds: 1800
+    refresh-seconds: 604800
+    # Use false only for local HTTP development; production cookies must be Secure.
+    cookie-secure: ${AUTH_COOKIE_SECURE:false}
+    allowed-origins: ${AUTH_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8080}
   data:
     # Relative paths resolve from the process working directory, normally backend/.
     root: ${DATA_DIR:../data}

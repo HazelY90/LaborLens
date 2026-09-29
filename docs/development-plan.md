@@ -10,9 +10,13 @@ AI is reserved for policy extraction and evidence-grounded interpretation.
 Source selection, CSV profiling and an initial review of all five policy PDFs
 are documented. Statistical tables, the six-column policy table, five policy
 types, the shared source-file registry with checksums, and job execution history
-are designed. Production pipelines, business APIs and dashboard features remain implementation
-work. Flyway V1 and an isolated migration test are now implemented; applying
-them and verifying SQL execution remain pending. The analysis schema and
+are designed. A manual ingestion runner now executes file preparation for all
+nine sources, CSV processing for the four statistical tables, then AI policy
+extraction for the five reports. The jobs include run history, validation,
+transactional replacement and evidence artifacts. Live download/model verification,
+database integration verification, business APIs and dashboard features remain
+work. The V1 database
+migration is complete, and an isolated migration test is implemented. The analysis schema and
 exhaustive policy extraction remain to be completed.
 
 - [Data Sources and APIs](data_api.md): approved sources, ingestion rules, and
@@ -43,18 +47,27 @@ policy/analysis evidence requirements are explicit and testable.
 
 ## 3. Build the Pipelines
 
-Start with ALF01 ingestion and a trend query, then MUM01. Add policy extraction
-for the 2018–2021, 2021–2023, and 2023–2025 reports to establish combined analysis.
-Extend to QLF50, the remaining reports, and the selected QLF59 categories.
+Use one manual entry point to execute three stages in order. First validate,
+reuse or download all four CSV files and all five PDFs, and register them in
+`source_file`. After all files are prepared, process ALF01, MUM01, QLF50 and
+QLF59 sequentially, writing each to its corresponding statistical table using
+the mappings in [Schema Design](schema_design.md).
+
+Next, process all five policy PDFs for 2018–2021, 2021–2023, 2023–2025,
+2024–2025 and 2025–2028. Extract page-aware text, call the AI API to extract
+policies, validate the output and evidence, and write the results to `policy`
+with the corresponding `source_file_id`.
+
+Complete ingestion of all four CSV files and all five PDFs before developing
+trend-query APIs and combined analysis.
 
 - Implement acquisition, registration, CSV import and PDF extraction according
   to [Data Ingestion Jobs](data_ingestion.md).
-- Analysis: calculate statistics in Java/SQL, select relevant validated policies,
-  generate findings, and verify their evidence references.
 
 **Done when:** repeat imports do not duplicate observations, failed refreshes
-preserve existing data, invalid model output is rejected or flagged, and each
-analysis retains its exact evidence. Test representative success and failure
+preserve existing data, all four statistical tables contain validated observations,
+and policies from all five PDFs retain their source evidence. Invalid model output
+must be rejected or flagged. Test representative success and failure
 cases, including missing/invalid values, duplicate keys, and rollback.
 
 ## 4. Implement Backend Services
@@ -63,6 +76,10 @@ Build repositories and services for sources, statistics, policies, analyses, and
 accounts. Expose versioned APIs for filters, trends, supported calculations,
 policy browsing, and saved or requested analyses. Return units, source references,
 data availability, pagination, and consistent errors.
+
+For combined analysis, calculate statistics in Java/SQL, select relevant
+validated policies, generate findings, and verify their evidence references.
+Each saved analysis must retain its exact statistical inputs and policy evidence.
 
 Implement registration, login, profile updates, password changes, secure password
 hashing, and JWT authentication. Keep credentials outside version control and

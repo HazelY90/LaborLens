@@ -3,3 +3,4 @@ notes/
 .DS_Store
 AGENTS.md
 data/policies/tmp/
+data/runs/

@@ -1,0 +1,33 @@
+{
+  "instructions": [
+    "Return only a valid JSON object matching structure, without Markdown fences or commentary.",
+    "The example defines the format only; replace its values with the supplied source and evidence.",
+    "Return one array item per policy. All seven fields are required; do not add other fields.",
+    "If the entire supplied PDF contain no qualifying policies, return the empty_result object."
+  ],
+  "structure": {
+    "policies": [
+      {
+        "period_start": 2025,
+        "period_end": 2028,
+        "policy": "One concrete action or target in English.",
+        "type": "SKILLS_DEVELOPMENT",
+        "source_file": "statement-of-strategy-2025-2028.pdf",
+        "page": 1,
+        "quote": "An exact supporting excerpt from the cited source page."
+      }
+    ]
+  },
+  "field_rules": {
+    "period_start": "Integer strategy start year copied from the supplied source.",
+    "period_end": "Integer strategy end year copied from the supplied source.",
+    "policy": "Nonblank English description of one supported action or target.",
+    "type": "One of the policy_types defined in the prompt rules.",
+    "source_file": "Exact filename of the supplied source.",
+    "page": "One-based integer physical PDF page number.",
+    "quote": "Exact supporting excerpt of at least 20 characters from the cited page."
+  },
+  "empty_result": {
+    "policies": []
+  }
+}

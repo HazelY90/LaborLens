@@ -162,10 +162,34 @@
     </dependencyManagement>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <!-- Preserve the policy prompt subdirectory for classpath loading. -->
+                <directory>src/main/java</directory>
+                <includes>
+                    <include>com/hazely/laborlens/jobs/policyExtraction/promts/*.json</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>${flyway.version}</version>
+                <configuration>
+                    <!-- Share the local database configuration with Spring Boot to keep credentials out of pom.xml. -->
+                    <configFiles>
+                        <configFile>${project.basedir}/.env</configFile>
+                    </configFiles>
+                    <cleanDisabled>false</cleanDisabled>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -1,0 +1,19 @@
+# Activate explicitly with --spring.profiles.active=ingestion for a one-shot pipeline.
+spring:
+  main:
+    web-application-type: none
+  ai:
+    openai:
+      # Keep the HTTP request timeout aligned with the whole-PDF job deadline.
+      timeout: ${app.jobs.pdf.timeout-seconds:600}s
+
+app:
+  jobs:
+    enabled: true
+    refresh: false
+    force: false
+    pdf:
+      # The configured Spring AI chat model and credentials are used without overrides.
+      timeout-seconds: 600
+      # Bump this when provider-specific options change.
+      config-version: policy-pdf-v2
