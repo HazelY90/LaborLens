@@ -1,0 +1,21 @@
+{
+  "theme": {
+    "primary": "#1768AC",
+    "dark": "#123B63"
+  },
+  "charts": {
+    "lines": [
+      "#1768AC",
+      "#168579",
+      "#A87800",
+      "#D65F26",
+      "#A54379"
+    ],
+    "bar": "#1768AC",
+    "missing": "#9CA3AF"
+  },
+  "surface": {
+    "background": "#F5F7FA",
+    "card": "#FFFFFF"
+  }
+}
