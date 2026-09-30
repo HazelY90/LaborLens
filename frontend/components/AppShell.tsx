@@ -6,9 +6,9 @@ import { Header } from "./Header";
 import { AuthDialog } from "@/features/auth/AuthDialog";
 
 function Content({ children }: { children: ReactNode }) {
-  const { error, notice, view, restore } = useAuth();
+  // Session restoration runs silently; explicit account actions retain their feedback.
+  const { notice, view } = useAuth();
   return <><a className="skip-link" href="#main-content">Skip to content</a><Header />
-    {error && <div className="site-message error" role="alert">{error} <button className="text-button" onClick={() => void restore()}>Try again</button></div>}
     {notice && !view && <div className="site-message" role="status">{notice}</div>}
     {children}<AuthDialog /></>;
 }
