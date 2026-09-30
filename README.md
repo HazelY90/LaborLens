@@ -22,7 +22,7 @@ compare groups and browse employment policies in one place.
 
 | Area | Technologies |
 | --- | --- |
-| Frontend | TypeScript, React, Next.js, Tailwind CSS, SVG |
+| Frontend | TypeScript, React, Next.js, Tailwind CSS, Recharts |
 | Backend | Java, Spring Boot, Spring Data JPA, Spring Security |
 | Database | MySQL, Flyway |
 | Policy extraction | Spring AI, OpenAI |

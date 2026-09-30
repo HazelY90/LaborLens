@@ -17,7 +17,9 @@ policies extracted from five strategy PDFs.
   password changes, logout and account deletion. JWTs use database token versions
   for revocation; refresh credentials use an HttpOnly cookie.
 - **Frontend:** public homepage, shared header, account dialogs and five data pages.
-  Statistics use SVG trends and HTML/CSS bars. Policies use category tabs and a
+  Statistics use Recharts trend lines and responsive vertical comparison bars.
+  Comparison labels wrap without horizontal chart scrolling; compact tooltips
+  show periods and values with units. Policies use category tabs and a
   strategy-period timeline with source links at the bottom.
 
 Combined AI analysis, saved analyses, email verification and password recovery

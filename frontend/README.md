@@ -2,6 +2,17 @@
 
 Requires Node.js 20.9+, npm and the running backend.
 
+## Charts
+
+Statistical pages use Recharts for trend lines and vertical comparison bars.
+Trend charts preserve all period slots and scroll horizontally when needed.
+Comparison bars fit the card width without horizontal scrolling; category labels
+wrap in aligned CSS Grid columns below the chart, and the value axis is hidden.
+Tooltips show only the period and values with units. Both chart types provide
+expandable data tables and distinguish missing observations from zero.
+
+See [Frontend Design](../docs/frontend_design.md) for layout and interaction details.
+
 ## Configuration
 
 Create `frontend/.env.local` (shown value is the default):

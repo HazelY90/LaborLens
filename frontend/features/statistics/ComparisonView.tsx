@@ -1,5 +1,7 @@
 "use client";
 import { useCallback, useState } from "react";
+import { Bar, BarChart, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { ChartTooltip } from "./ChartTooltip";
 import { getComparison } from "@/services/dataService";
 import { useResource } from "@/hooks/useResource";
 import { RequestState } from "@/components/RequestState";
@@ -23,18 +25,38 @@ export function ComparisonView({ dataset }: { dataset: Dataset }) {
   </div>
   {!data ? <RequestState error={error} retry={retry} /> : <div className="comparison-grid">{data.charts.map((chart) => {
     const dimension = dataset.dimensions.find((item) => item.key === chart.dimension)!;
-    const isCompact = chart.dimension === "ageGroup" || chart.dimension === "economicSector";
+    const rows = chart.bars.map((bar) => ({ ...bar,
+      label: dimension.values.find((value) => value.code === bar.code)?.label ?? bar.code,
+    }));
     const max = Math.max(1, ...chart.bars.map((bar) => bar.value ?? 0)) * 1.1;
     return <section className="content-card" key={chart.dimension}><div className="section-heading"><h2>{dimension.label}</h2><span className="unit">{data.period} · {data.unit}</span></div>
       <p className="small muted">{filterLabel({ ...dataset, dimensions: dataset.dimensions.filter((item) => item.key !== chart.dimension) }, chart.fixedFilters)}</p>
-      <div className={isCompact ? `compact-chart${chart.dimension === "economicSector" ? " sector-chart" : ""}` : "chart-scroll"} tabIndex={0} role="region" aria-label={`${dimension.label} comparison`}><div className="bar-chart" style={isCompact ? undefined : { minWidth: Math.max(380, chart.bars.length * 100) }}>
-        {chart.bars.map((bar) => <div className="bar-column" key={bar.code}>
-          <div className="bar-space">{bar.value === null ? <div className="missing-bar"><span>Data unavailable</span></div> :
-            <div className={`bar ${bar.value === 0 ? "zero-bar" : ""}`} style={{ height: `${bar.value / max * 100}%`, background: colors.charts.bar }}>
-              <span>{bar.value.toLocaleString("en-IE")}</span></div>}</div>
-          <p>{dimension.values.find((value) => value.code === bar.code)?.label ?? bar.code}</p>
-        </div>)}
-      </div></div>
+      <div className="comparison-chart" role="region" aria-label={`${dimension.label} comparison`}>
+          <ResponsiveContainer width="100%" height={280} minWidth={0}>
+            <BarChart data={rows} margin={{ top: 30, right: 16, bottom: 0, left: 16 }} accessibilityLayer>
+              {/* Hide the value axis while retaining a consistent scale. */}
+              <YAxis domain={[0, max]} hide />
+              <XAxis dataKey="label" tick={false} tickLine={false} height={8} />
+              <Tooltip shared={false} filterNull={false}
+                content={(props) => <ChartTooltip {...props} period={data.period} unit={data.unit} />} />
+              <Bar dataKey="value" fill={colors.charts.bar} maxBarSize={65} radius={[5, 5, 0, 0]}
+                minPointSize={2} isAnimationActive={false}>
+                <LabelList dataKey="value" position="top" fontSize={11}
+                  formatter={(value) => value == null ? "" : Number(value).toLocaleString("en-IE")} />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+          {/* Match the chart's category bands and let labels grow vertically. */}
+          <div className="comparison-labels" style={{ gridTemplateColumns: `repeat(${Math.max(rows.length, 1)}, minmax(0, 1fr))` }}>
+            {rows.map((row) => <div className="chart-category" key={row.code}>{row.label}</div>)}
+          </div>
+      </div>
+      {rows.some((row) => row.value === null) && <p className="small muted">Data unavailable: {rows.filter((row) => row.value === null).map((row) => row.label).join(", ")}</p>}
+      <details className="data-table"><summary>View data table</summary><div className="table-scroll"><table>
+        <caption>{dimension.label} ({data.unit})</caption>
+        <thead><tr><th scope="col">Category</th><th scope="col">Value</th></tr></thead>
+        <tbody>{rows.map((row) => <tr key={row.code}><th scope="row">{row.label}</th><td>{row.value?.toLocaleString("en-IE") ?? "Data unavailable"}</td></tr>)}</tbody>
+      </table></div></details>
     </section>;
   })}</div>}
   </>;
