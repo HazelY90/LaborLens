@@ -5,3 +5,5 @@ notes/
 AGENTS.md
 data/policies/tmp/
 data/runs/
+*.pem
+
