@@ -17,9 +17,10 @@ public class RefreshCookie {
     private final boolean isSecure;
     private final List<String> origins;
     private final JwtTokens jwt;
+
     public RefreshCookie(@Value("${app.auth.cookie-secure:true}") boolean isSecure,
-                         @Value("${app.auth.allowed-origins:http://localhost:5173,http://localhost:8080}") String origins,
-                         JwtTokens jwt) {
+            @Value("${app.auth.allowed-origins:http://localhost:5173,http://localhost:8080}") String origins,
+            JwtTokens jwt) {
         this.isSecure = isSecure;
         this.origins = Arrays.stream(origins.split(",")).map(String::strip).filter(s -> !s.isEmpty()).toList();
         if (this.origins.isEmpty() || this.origins.stream().anyMatch(s -> s.contains("*") || s.equals("null"))) {
@@ -27,17 +28,29 @@ public class RefreshCookie {
         }
         this.jwt = jwt;
     }
-    public List<String> origins() { return origins; }
-    public String issue(String token) { return cookie(token, jwt.refreshSeconds()); }
-    public String clear() { return cookie("", 0); }
+
+    public List<String> origins() {
+        return origins;
+    }
+
+    public String issue(String token) {
+        return cookie(token, jwt.refreshSeconds());
+    }
+
+    public String clear() {
+        return cookie("", 0);
+    }
+
     private String cookie(String token, long seconds) {
         return ResponseCookie.from(NAME, token).httpOnly(true).secure(isSecure).sameSite("Lax")
                 .path("/api/auth").maxAge(Duration.ofSeconds(seconds)).build().toString();
     }
+
     public String read(HttpServletRequest request) {
         // Browsers send Origin on these POST requests; non-browser clients must supply it too.
         if (!origins.contains(request.getHeader("Origin"))) {
-            throw new AuthError(403, "INVALID_ORIGIN", "Request origin is not allowed.", null);
+            throw new AuthError(403, "INVALID_ORIGIN", "Request origin is not allowed.",
+                    null);
         }
         String token = null;
         if (request.getCookies() != null) {

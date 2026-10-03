@@ -37,24 +37,30 @@ public class CsvJob {
             JobStore.Source registered = session.source(source);
             if (registered == null) throw new IllegalStateException("Run file preparation before CSV import");
             JobFiles.Input input = files.read(source);
-            long run = session.start(source, JobType.CSV_IMPORT, registered, input.checksum(), VERSION);
+            long run = session.start(source, JobType.CSV_IMPORT, registered, input.checksum(),
+                    VERSION);
             try {
                 Path artifact = files.archive(run, source, input, VERSION);
                 if (!registered.checksum().equals(input.checksum())) {
                     throw new IllegalStateException("Local file changed; run file preparation again");
                 }
-                if (!isForce && session.isCurrent(registered.id(), JobType.CSV_IMPORT, input.checksum(), VERSION)) {
+                if (!isForce && session.isCurrent(registered.id(), JobType.CSV_IMPORT,
+                        input.checksum(), VERSION)) {
                     session.finish(run, JobStatus.SKIPPED, null, null);
-                    return new JobOutcome(run, source.fileName(), JobStatus.SKIPPED, null);
+                    return new JobOutcome(run, source.fileName(), JobStatus.SKIPPED,
+                            null);
                 }
                 CsvParser.Result parsed = parser.parse(source, input.bytes());
                 JobFiles.properties(artifact.resolve("counts.properties"), Map.of(
                         "retained", Integer.toString(parsed.rows().size()),
                         "excluded", Long.toString(parsed.excluded()),
-                        "missing", Long.toString(parsed.missing()), "rejected", "0"));
+                        "missing", Long.toString(parsed.missing()), "rejected",
+                        "0"));
                 session.replace(source, parsed.rows(), run);
-                log.info("Job {} imported {} retained={} excluded={} missing={} rejected=0", run,
-                        source.fileName(), parsed.rows().size(), parsed.excluded(), parsed.missing());
+                log.info("Job {} imported {} retained={} excluded={} missing={} rejected=0",
+                        run,
+                        source.fileName(), parsed.rows().size(), parsed.excluded(),
+                        parsed.missing());
                 return new JobOutcome(run, source.fileName(), JobStatus.SUCCESS, (long) parsed.rows().size());
             } catch (Exception error) {
                 session.fail(run, error);

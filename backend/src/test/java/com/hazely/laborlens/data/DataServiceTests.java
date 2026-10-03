@@ -25,7 +25,8 @@ class DataServiceTests {
     @Test
     void preservesZerosGapsAndChronologicalOrder() {
         when(annual.findAll(org.mockito.ArgumentMatchers.<Specification<AnnualEmploymentRate>>any()))
-                .thenReturn(List.of(row(2025, Sex.ALL, AgeGroup.ALL, 70), row(2023, Sex.ALL, AgeGroup.ALL, 0)));
+                .thenReturn(List.of(row(2025, Sex.ALL, AgeGroup.ALL, 70), row(2023, Sex.ALL,
+                AgeGroup.ALL, 0)));
         var result = (Trend) metrics.query(DataCatalog.ANNUAL, new LinkedMultiValueMap<>());
         assertEquals(7, result.points().size());
         assertEquals(new Point("2023", 0.0), result.points().get(4));
@@ -36,13 +37,17 @@ class DataServiceTests {
     @Test
     void fixesOtherDimensionsToOverallForEachChart() {
         when(annual.findAll(org.mockito.ArgumentMatchers.<Specification<AnnualEmploymentRate>>any()))
-                .thenReturn(List.of(row(2024, Sex.ALL, AgeGroup.ALL, 70), row(2024, Sex.FEMALE, AgeGroup.ALL, 65),
-                        row(2024, Sex.ALL, AgeGroup.AGE_30_34, 80), row(2024, Sex.FEMALE, AgeGroup.AGE_30_34, 99)));
+                .thenReturn(List.of(row(2024, Sex.ALL, AgeGroup.ALL, 70), row(2024, Sex.FEMALE,
+                AgeGroup.ALL, 65),
+                row(2024, Sex.ALL, AgeGroup.AGE_30_34, 80), row(2024, Sex.FEMALE, AgeGroup.AGE_30_34,
+                99)));
         var params = new LinkedMultiValueMap<String, String>();
-        params.add("view", "comparison"); params.add("year", "2024");
+        params.add("view", "comparison");
+        params.add("year", "2024");
         var result = (Comparison) metrics.query(DataCatalog.ANNUAL, params);
         var sex = result.charts().stream().filter(c -> c.dimension().equals("sex")).findFirst().orElseThrow();
-        assertEquals(List.of(new Bar("ALL", 70.0), new Bar("FEMALE", 65.0), new Bar("MALE", null)), sex.bars());
+        assertEquals(List.of(new Bar("ALL", 70.0), new Bar("FEMALE", 65.0), new Bar("MALE", null)),
+                sex.bars());
         var age = result.charts().get(0);
         assertEquals(80.0, age.bars().stream().filter(v -> v.code().equals("AGE_30_34")).findFirst().orElseThrow().value());
     }
@@ -69,18 +74,29 @@ class DataServiceTests {
         var runs = mock(JobRunRepository.class);
         var evidence = mock(PolicyEvidence.class);
         var source = new SourceFile();
-        set(source, "id", 2L); set(source, "fileName", "report.pdf"); set(source, "downloadUrl", "https://example.org/report.pdf");
+        set(source, "id", 2L);
+        set(source, "fileName", "report.pdf");
+        set(source, "downloadUrl", "https://example.org/report.pdf");
         var first = new Policy();
-        set(first, "id", 10L); set(first, "source", source); set(first, "periodStart", 2023); set(first, "periodEnd", 2025);
+        set(first, "id", 10L);
+        set(first, "source", source);
+        set(first, "periodStart", 2023);
+        set(first, "periodEnd", 2025);
         set(first, "policy", "Training action");
-        var second = new Policy(); set(second, "id", 11L); set(second, "source", source);
-        var run = new JobRun(); set(run, "id", 20L); set(run, "sourceFileId", 2L);
+        var second = new Policy();
+        set(second, "id", 11L);
+        set(second, "source", source);
+        var run = new JobRun();
+        set(run, "id", 20L);
+        set(run, "sourceFileId", 2L);
         when(repo.findByTypeOrderByPeriodStartAscPeriodEndAscSourceIdAscIdAsc(PolicyType.SKILLS_DEVELOPMENT))
                 .thenReturn(List.of(first, second));
         when(runs.latestPolicies(List.of(2L))).thenReturn(List.of(run));
-        when(evidence.read(20)).thenReturn(Map.of(10L, new PolicyEvidence.Citation("report.pdf", 3),
+        when(evidence.read(20)).thenReturn(Map.of(10L, new PolicyEvidence.Citation("report.pdf",
+                3),
                 11L, new PolicyEvidence.Citation("different.pdf", 4)));
-        var params = new LinkedMultiValueMap<String, String>(); params.add("type", "SKILLS_DEVELOPMENT");
+        var params = new LinkedMultiValueMap<String, String>();
+        params.add("type", "SKILLS_DEVELOPMENT");
         var result = new PolicyService(repo, runs, evidence).query(params);
         assertEquals(3, result.items().get(0).page());
         assertNull(result.items().get(1).page());
@@ -90,9 +106,16 @@ class DataServiceTests {
 
     private static AnnualEmploymentRate row(int year, Sex sex, AgeGroup age, double value) {
         var row = new AnnualEmploymentRate();
-        set(row, "year", year); set(row, "sex", sex); set(row, "ageGroup", age);
-        set(row, "education", EducationLevel.ALL); set(row, "region", Region.IRELAND); set(row, "value", value);
+        set(row, "year", year);
+        set(row, "sex", sex);
+        set(row, "ageGroup", age);
+        set(row, "education", EducationLevel.ALL);
+        set(row, "region", Region.IRELAND);
+        set(row, "value", value);
         return row;
     }
-    private static void set(Object target, String field, Object value) { ReflectionTestUtils.setField(target, field, value); }
+
+    private static void set(Object target, String field, Object value) {
+        ReflectionTestUtils.setField(target, field, value);
+    }
 }

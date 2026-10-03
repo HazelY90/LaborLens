@@ -28,7 +28,8 @@ public final class CsvParser {
             "Other NACE Activities (S to V)", "NACE Unknown");
     private static final Set<String> MONTHLY_AGES = Set.of("AGE_15_24", "AGE_25_74", "AGE_15_74");
     private static final Set<String> ANNUAL_AGES = Set.of("ALL", "AGE_20_24", "AGE_25_29",
-            "AGE_30_34", "AGE_35_39", "AGE_40_44", "AGE_45_49", "AGE_50_54", "AGE_55_59", "AGE_60_64");
+            "AGE_30_34", "AGE_35_39", "AGE_40_44", "AGE_45_49", "AGE_50_54", "AGE_55_59",
+            "AGE_60_64");
     private static final Map<String, Map<String, String>> MAPPINGS = Map.of(
             "Age Group", labels(AgeGroup.values(), AgeGroup::getLabel),
             "Sex", labels(Sex.values(), Sex::getLabel),

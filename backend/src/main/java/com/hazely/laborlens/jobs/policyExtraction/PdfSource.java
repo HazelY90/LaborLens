@@ -15,11 +15,27 @@ public enum PdfSource implements SourceSpec {
         this.end = end;
     }
 
-    public int start() { return start; }
-    public int end() { return end; }
-    public String fileName() { return "statement-of-strategy-" + start + "-" + end + ".pdf"; }
-    public String table() { return "policy"; }
-    public String path() { return "policies/" + fileName(); }
-    public String url() { return "https://enterprise.gov.ie/en/publications/publication-files/" + fileName(); }
-}
+    public int start() {
+        return start;
+    }
 
+    public int end() {
+        return end;
+    }
+
+    public String fileName() {
+        return "statement-of-strategy-" + start + "-" + end + ".pdf";
+    }
+
+    public String table() {
+        return "policy";
+    }
+
+    public String path() {
+        return "policies/" + fileName();
+    }
+
+    public String url() {
+        return "https://enterprise.gov.ie/en/publications/publication-files/" + fileName();
+    }
+}

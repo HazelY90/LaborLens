@@ -43,30 +43,37 @@ class DataRepositoryTests {
                 + "(2023,2025,'Other','WORKING_CONDITIONS',1)");
         for (String status : List.of("SUCCESS", "SUCCESS", "FAILED", "SKIPPED")) {
             sql.update("INSERT INTO job_run (job_type,source_file_id,file_name,checksum,status,started_at,finished_at,row_count,process_version) "
-                    + "VALUES ('POLICY_EXTRACTION',1,'report.pdf',REPEAT('a',64),?,NOW(),NOW(),2,'v1')", status);
+                    + "VALUES ('POLICY_EXTRACTION',1,'report.pdf',REPEAT('a',64),?,NOW(),NOW(),2,'v1')",
+                    status);
         }
         var config = new Configuration().setProperty("hibernate.connection.url", mysql.getJdbcUrl())
                 .setProperty("hibernate.connection.username", mysql.getUsername())
                 .setProperty("hibernate.connection.password", mysql.getPassword())
                 .setProperty("hibernate.hbm2ddl.auto", "validate");
         for (Class<?> entity : List.of(AnnualEmploymentRate.class, MonthlyUnemploymentRate.class,
-                QuarterlyEmploymentRate.class, QuarterlyEmploymentCount.class, SourceFile.class, Policy.class, JobRun.class)) {
+                QuarterlyEmploymentRate.class, QuarterlyEmploymentCount.class, SourceFile.class,
+                Policy.class, JobRun.class)) {
             config.addAnnotatedClass(entity);
         }
         try (var factory = config.buildSessionFactory(); var em = factory.createEntityManager()) {
             var repos = new JpaRepositoryFactory(em);
             var service = new MetricService(repos.getRepository(AnnualEmploymentRateRepository.class),
                     repos.getRepository(MonthlyUnemploymentRateRepository.class),
-                    repos.getRepository(QuarterlyEmploymentRateRepository.class), repos.getRepository(QuarterlyEmploymentCountRepository.class));
+                    repos.getRepository(QuarterlyEmploymentRateRepository.class),
+                    repos.getRepository(QuarterlyEmploymentCountRepository.class));
             var empty = new LinkedMultiValueMap<String, String>();
             var annual = (Trend) service.query(DataCatalog.ANNUAL, empty);
-            assertEquals(0.0, annual.points().get(4).value()); assertNull(annual.points().get(5).value());
+            assertEquals(0.0, annual.points().get(4).value());
+            assertNull(annual.points().get(5).value());
             assertEquals(70.0, annual.points().get(6).value());
-            var filter = new LinkedMultiValueMap<String, String>(); filter.add("sex", "FEMALE");
+            var filter = new LinkedMultiValueMap<String, String>();
+            filter.add("sex", "FEMALE");
             assertEquals(65.0, ((Trend) service.query(DataCatalog.ANNUAL, filter)).points().get(6).value());
             assertEquals(4.5, ((Trend) service.query(DataCatalog.MONTHLY, empty)).points().get(83).value());
             var period = new LinkedMultiValueMap<String, String>();
-            period.add("view", "comparison"); period.add("year", "2024"); period.add("quarter", "2");
+            period.add("view", "comparison");
+            period.add("year", "2024");
+            period.add("quarter", "2");
             assertEquals(70.0, ((Comparison) service.query(DataCatalog.QUARTERLY, period)).charts().get(0).bars().get(0).value());
             assertEquals(200.0, ((Comparison) service.query(DataCatalog.COUNT, period)).charts().get(0).bars().get(0).value());
             var policies = repos.getRepository(PolicyRepository.class)

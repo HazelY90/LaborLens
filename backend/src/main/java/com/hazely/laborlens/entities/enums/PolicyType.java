@@ -10,6 +10,11 @@ public enum PolicyType {
 
     private final String label;
 
-    PolicyType(String label) { this.label = label; }
-    public String getLabel() { return label; }
+    PolicyType(String label) {
+        this.label = label;
+    }
+
+    public String getLabel() {
+        return label;
+    }
 }

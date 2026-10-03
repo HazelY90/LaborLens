@@ -20,11 +20,13 @@ import static org.mockito.Mockito.*;
 
 /** Exercise the real controller, validation, services and authenticated access without a live database. */
 @WebMvcTest(DataController.class)
-@Import({SecurityConfig.class, DataErrors.class, MetricService.class, PolicyService.class, PolicyEvidence.class, DataApiTests.CookieConfig.class})
+@Import({
+    SecurityConfig.class, DataErrors.class, MetricService.class, PolicyService.class, PolicyEvidence.class,
+    DataApiTests.CookieConfig.class
+})
 class DataApiTests {
     @Autowired MockMvc mvc;
     @MockitoBean AuthService auth;
-
 
     @MockitoBean AnnualEmploymentRateRepository annual;
     @MockitoBean MonthlyUnemploymentRateRepository monthly;
@@ -45,8 +47,10 @@ class DataApiTests {
 
     @Test
     void rejectsEveryEndpointWithoutCredentials() throws Exception {
-        for (String path : new String[]{"metadata", "annual-employment-rate", "monthly-unemployment-rate",
-                "quarterly-employment-rate", "quarterly-employment-count", "policies?type=SKILLS_DEVELOPMENT"}) {
+        for (String path : new String[]{
+            "metadata", "annual-employment-rate", "monthly-unemployment-rate",
+                    "quarterly-employment-rate", "quarterly-employment-count", "policies?type=SKILLS_DEVELOPMENT"
+        }) {
             mvc.perform(get("/api/data/" + path)).andExpect(status().isUnauthorized());
         }
     }
@@ -100,15 +104,16 @@ class DataApiTests {
     @WithMockUser
     void rejectsInvalidFiltersBeforeQuerying() throws Exception {
         for (String path : new String[]{
-                "annual-employment-rate?ageGroup=AGE_15_74", "annual-employment-rate?sex=FEMALE&sex=ALL",
-                "annual-employment-rate?sex=FEMALE,ALL", "annual-employment-rate?sex=", "annual-employment-rate?year=2024",
-                "annual-employment-rate?table=policy", "annual-employment-rate?view=comparison",
-                "annual-employment-rate?view=comparison&year=2024&sex=ALL",
-                "monthly-unemployment-rate?view=comparison&year=2024", "monthly-unemployment-rate?ageGroup=ALL",
-                "quarterly-employment-rate?view=comparison&year=2024", "quarterly-employment-rate?region=IRELAND",
-                "quarterly-employment-count?view=comparison&year=2024&quarter=5",
-                "quarterly-employment-count?view=comparison&year=2018&quarter=1",
-                "policies", "policies?type=UNKNOWN", "metadata?type=ALL"}) {
+            "annual-employment-rate?ageGroup=AGE_15_74", "annual-employment-rate?sex=FEMALE&sex=ALL",
+            "annual-employment-rate?sex=FEMALE,ALL", "annual-employment-rate?sex=", "annual-employment-rate?year=2024",
+            "annual-employment-rate?table=policy", "annual-employment-rate?view=comparison",
+            "annual-employment-rate?view=comparison&year=2024&sex=ALL",
+                    "monthly-unemployment-rate?view=comparison&year=2024", "monthly-unemployment-rate?ageGroup=ALL",
+            "quarterly-employment-rate?view=comparison&year=2024", "quarterly-employment-rate?region=IRELAND",
+            "quarterly-employment-count?view=comparison&year=2024&quarter=5",
+                    "quarterly-employment-count?view=comparison&year=2018&quarter=1",
+            "policies", "policies?type=UNKNOWN", "metadata?type=ALL"
+        }) {
             mvc.perform(get("/api/data/" + path)).andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.code").exists()).andExpect(jsonPath("$.field").exists());
         }

@@ -15,28 +15,38 @@ public class JobRun {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Enumerated(EnumType.STRING)
     @Column(name = "job_type", nullable = false, length = 32)
     private JobType jobType;
+
     @Column(name = "source_file_id")
     private Long sourceFileId;
+
     @Column(name = "file_name", nullable = false)
     private String fileName;
+
     @Column(columnDefinition = "CHAR(64)")
     private String checksum;
+
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
     private JobStatus status;
+
     @Column(name = "started_at", nullable = false)
     private LocalDateTime startedAt;
+
     @Column(name = "finished_at")
     private LocalDateTime finishedAt;
+
     @Column(name = "row_count")
     private Long rowCount;
+
     @Column(name = "error_message", columnDefinition = "TEXT")
     private String errorMessage;
+
     @Column(name = "process_version", nullable = false, length = 128)
     private String processVersion;
 }

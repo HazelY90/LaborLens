@@ -22,12 +22,13 @@ public class MetricService {
     private final QuarterlyEmploymentCountRepository count;
 
     public MetricService(AnnualEmploymentRateRepository annual, MonthlyUnemploymentRateRepository monthly,
-                         QuarterlyEmploymentRateRepository quarterly, QuarterlyEmploymentCountRepository count) {
+            QuarterlyEmploymentRateRepository quarterly, QuarterlyEmploymentCountRepository count) {
         this.annual = annual;
         this.monthly = monthly;
         this.quarterly = quarterly;
         this.count = count;
     }
+
     public MetricResult query(DataCatalog data, MultiValueMap<String, String> params) {
         MetricFilter filter = DataFilters.metrics(data, params);
         List<? extends Metric> rows = switch (data) {
@@ -36,22 +37,27 @@ public class MetricService {
             case QUARTERLY -> read(quarterly, filter);
             case COUNT -> read(count, filter);
         };
-        return filter.view().equals("trend") ? trend(data, filter, rows) : comparison(data, filter, rows);
+        return filter.view().equals("trend") ? trend(data, filter, rows) : comparison(data, filter,
+                rows);
     }
+
     private <T extends Metric> List<T> read(JpaSpecificationExecutor<T> repo, MetricFilter filter) {
         Specification<T> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.between(root.get("year"), 2019, 2025));
             if (filter.view().equals("trend")) {
-                filter.dimensions().forEach((key, code) -> predicates.add(cb.equal(root.get(key), enumValue(key, code))));
+                filter.dimensions().forEach((key, code) -> predicates.add(cb.equal(root.get(key),
+                        enumValue(key, code))));
             } else {
                 predicates.add(cb.equal(root.get("year"), filter.year()));
-                if (filter.quarter() != null) predicates.add(cb.equal(root.get("quarter"), filter.quarter()));
+                if (filter.quarter() != null) predicates.add(cb.equal(root.get("quarter"),
+                        filter.quarter()));
             }
             return cb.and(predicates.toArray(Predicate[]::new));
         };
         return repo.findAll(spec);
     }
+
     private Enum<?> enumValue(String key, String code) {
         return switch (key) {
             case "ageGroup" -> AgeGroup.valueOf(code);
@@ -63,22 +69,27 @@ public class MetricService {
             default -> throw new IllegalStateException("Unmapped dimension");
         };
     }
+
     private Trend trend(DataCatalog data, MetricFilter filter, List<? extends Metric> rows) {
         Map<String, Double> values = new HashMap<>();
         for (Metric row : rows) values.put(row.period(), row.getValue());
         List<Point> points = new ArrayList<>();
+        // Emit every catalog period; absent observations retain a null value.
         for (int year : data.metadata().years()) {
             for (int part = 1; part <= data.periods(); part++) {
                 String period = data.period(year, part);
                 points.add(new Point(period, values.get(period)));
             }
         }
-        return new Trend(data.metadata().id(), "trend", data.metadata().unit(), filter.dimensions(), List.copyOf(points));
+        return new Trend(data.metadata().id(), "trend", data.metadata().unit(), filter.dimensions(),
+                List.copyOf(points));
     }
+
     private Comparison comparison(DataCatalog data, MetricFilter filter, List<? extends Metric> rows) {
         List<Chart> charts = new ArrayList<>();
         for (Dimension dim : data.metadata().dimensions()) {
             Map<String, String> fixed = new LinkedHashMap<>(data.metadata().defaults());
+            // Vary one dimension while holding the others at their catalog defaults.
             fixed.remove(dim.key());
             Map<String, Double> values = new HashMap<>();
             for (Metric row : rows) {
@@ -91,6 +102,7 @@ public class MetricService {
             charts.add(new Chart(dim.key(), Collections.unmodifiableMap(fixed), bars));
         }
         return new Comparison(data.metadata().id(), "comparison", data.metadata().unit(),
-                data.period(filter.year(), filter.quarter() == null ? 1 : filter.quarter()), List.copyOf(charts));
+                data.period(filter.year(), filter.quarter() == null ? 1 : filter.quarter()),
+                List.copyOf(charts));
     }
 }

@@ -13,13 +13,19 @@ import java.util.List;
 /** Authenticates access JWTs only; refresh cookies are handled by auth endpoints. */
 public class JwtFilter extends OncePerRequestFilter {
     private final AuthService auth;
-    public JwtFilter(AuthService auth) { this.auth = auth; }
+
+    public JwtFilter(AuthService auth) {
+        this.auth = auth;
+    }
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI().substring(request.getContextPath().length());
         return request.getMethod().equals("OPTIONS") || (request.getMethod().equals("POST")
-                && List.of("/api/auth/register", "/api/auth/login", "/api/auth/refresh", "/api/auth/logout").contains(path));
+                && List.of("/api/auth/register", "/api/auth/login", "/api/auth/refresh",
+                "/api/auth/logout").contains(path));
     }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
@@ -28,8 +34,10 @@ public class JwtFilter extends OncePerRequestFilter {
             try {
                 if (!header.startsWith("Bearer ") || header.substring(7).isBlank()) throw AuthError.unauthorized();
                 var identity = auth.authenticate(header.substring(7));
+                // Publish authentication only after token and account validation succeed.
                 var context = SecurityContextHolder.createEmptyContext();
-                context.setAuthentication(UsernamePasswordAuthenticationToken.authenticated(identity, null, List.of()));
+                context.setAuthentication(UsernamePasswordAuthenticationToken.authenticated(identity,
+                        null, List.of()));
                 SecurityContextHolder.setContext(context);
             } catch (AuthError error) {
                 SecurityContextHolder.clearContext();

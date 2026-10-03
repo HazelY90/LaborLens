@@ -67,7 +67,8 @@ public class JobStore {
         }
     }
 
-    public record Source(long id, String checksum) {}
+    public record Source(long id, String checksum) {
+    }
 
     public final class Session {
         private final Connection db;
@@ -92,11 +93,12 @@ public class JobStore {
             }
         }
 
-        public long start(SourceSpec source, JobType type, Source registered, String checksum, String version)
+        public long start(SourceSpec source, JobType type, Source registered, String checksum,
+                String version)
                 throws SQLException {
             try (PreparedStatement stmt = db.prepareStatement(
                     "INSERT INTO job_run (job_type, source_file_id, file_name, checksum, status, started_at, process_version) "
-                            + "VALUES (?, ?, ?, ?, 'RUNNING', ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                    + "VALUES (?, ?, ?, ?, 'RUNNING', ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, type.name());
                 stmt.setObject(2, registered == null ? null : registered.id());
                 stmt.setString(3, source.fileName());
@@ -115,7 +117,7 @@ public class JobStore {
             transaction(session -> {
                 try (PreparedStatement stmt = db.prepareStatement(
                         "INSERT INTO source_file (file_name, table_name, download_url, download_path, checksum) "
-                                + "VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE checksum = ?")) {
+                        + "VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE checksum = ?")) {
                     stmt.setString(1, source.fileName());
                     stmt.setString(2, source.table());
                     stmt.setString(3, source.url());
@@ -149,7 +151,7 @@ public class JobStore {
             // Historical matches are insufficient after a different version was committed.
             try (PreparedStatement stmt = db.prepareStatement(
                     "SELECT checksum, process_version FROM job_run WHERE source_file_id = ? "
-                            + "AND job_type = ? AND status = 'SUCCESS' ORDER BY id DESC LIMIT 1")) {
+                    + "AND job_type = ? AND status = 'SUCCESS' ORDER BY id DESC LIMIT 1")) {
                 stmt.setLong(1, source);
                 stmt.setString(2, type.name());
                 try (ResultSet rows = stmt.executeQuery()) {
@@ -166,7 +168,8 @@ public class JobStore {
                 try (PreparedStatement stmt = db.prepareStatement(source.insertSql())) {
                     int count = 0;
                     for (List<Object> row : rows) {
-                        for (int i = 0; i < row.size(); i++) stmt.setObject(i + 1, row.get(i));
+                        for (int i = 0; i < row.size(); i++) stmt.setObject(i + 1,
+                                row.get(i));
                         stmt.addBatch();
                         if (++count % 500 == 0) {
                             stmt.executeBatch();
@@ -182,7 +185,7 @@ public class JobStore {
 
         /** The evidence callback runs before commit so its failure also rolls back policies. */
         public void replacePolicies(PdfSource source, long sourceId, List<PolicyDraft> policies,
-                                    long run, PolicyEvidence evidence) throws Exception {
+                long run, PolicyEvidence evidence) throws Exception {
             Source registered = source(source);
             if (registered == null || registered.id() != sourceId) {
                 throw new IllegalStateException("Policy source is not registered");
@@ -231,7 +234,7 @@ public class JobStore {
         public void finish(long run, JobStatus status, Long count, String error) throws SQLException {
             try (PreparedStatement stmt = db.prepareStatement(
                     "UPDATE job_run SET status = ?, finished_at = GREATEST(started_at, ?), "
-                            + "row_count = ?, error_message = ? WHERE id = ? AND status = 'RUNNING'")) {
+                    + "row_count = ?, error_message = ? WHERE id = ? AND status = 'RUNNING'")) {
                 stmt.setString(1, status.name());
                 stmt.setObject(2, now());
                 stmt.setObject(3, count);

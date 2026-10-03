@@ -31,6 +31,7 @@ final class CsvReader implements AutoCloseable {
             if (isQuoted) {
                 if (ch == '"') {
                     int next = reader.read();
+                    // Two quotes inside a quoted field represent one literal quote.
                     if (next == '"') cell.append('"');
                     else {
                         isQuoted = false;
@@ -62,6 +63,7 @@ final class CsvReader implements AutoCloseable {
                 cell.append((char) ch);
             }
         }
+        // EOF may finish a record, but it cannot finish an open quoted field.
         if (isQuoted) throw new IllegalArgumentException("Unclosed CSV quote");
         if (!isStarted) return null;
         cells.add(cell.toString().trim());

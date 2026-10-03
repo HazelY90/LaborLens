@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 /** Queries only the fixed annual_employment_rate mapping. */
-public interface AnnualEmploymentRateRepository extends JpaRepository<AnnualEmploymentRate, Long>, JpaSpecificationExecutor<AnnualEmploymentRate> {}
+public interface AnnualEmploymentRateRepository extends JpaRepository<AnnualEmploymentRate, Long>, JpaSpecificationExecutor<AnnualEmploymentRate> {
+}

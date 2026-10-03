@@ -11,7 +11,16 @@ export const metadata: Metadata = {
 
 /** Theme tokens come from the shared palette, including future chart colours. */
 export default function RootLayout({ children }: { children: ReactNode }) {
-  const theme = { "--primary": colors.theme.primary, "--dark": colors.theme.dark,
-    "--background": colors.surface.background, "--card": colors.surface.card } as CSSProperties;
-  return <html lang="en"><body style={theme}><AppShell>{children}</AppShell></body></html>;
+  const theme = {
+    "--primary": colors.theme.primary,
+    "--dark": colors.theme.dark,
+    "--background": colors.surface.background,
+    "--card": colors.surface.card
+  } as CSSProperties;
+
+  return <html lang="en">
+    <body style={theme}>
+      <AppShell>{children}</AppShell>
+    </body>
+  </html>;
 }

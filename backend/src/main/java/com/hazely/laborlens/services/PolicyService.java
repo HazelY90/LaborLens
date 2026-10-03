@@ -14,11 +14,13 @@ public class PolicyService {
     private final PolicyRepository policies;
     private final JobRunRepository runs;
     private final PolicyEvidence evidence;
+
     public PolicyService(PolicyRepository policies, JobRunRepository runs, PolicyEvidence evidence) {
         this.policies = policies;
         this.runs = runs;
         this.evidence = evidence;
     }
+
     public Policies query(MultiValueMap<String, String> params) {
         var type = DataFilters.policy(params);
         var rows = policies.findByTypeOrderByPeriodStartAscPeriodEndAscSourceIdAscIdAsc(type);
@@ -30,8 +32,10 @@ public class PolicyService {
             var source = row.getSource();
             var citation = pages.getOrDefault(source.getId(), Map.of()).get(row.getId());
             Integer page = citation != null && source.getFileName().equals(citation.source()) ? citation.page() : null;
-            return new PolicyItem(row.getId(), row.getPeriodStart(), row.getPeriodEnd(), row.getPolicy(),
-                    new Source(source.getId(), source.getFileName(), source.getDownloadUrl()), page);
+            return new PolicyItem(row.getId(), row.getPeriodStart(), row.getPeriodEnd(),
+                    row.getPolicy(),
+                    new Source(source.getId(), source.getFileName(), source.getDownloadUrl()),
+                    page);
         }).toList();
         return new Policies(type.name(), items);
     }

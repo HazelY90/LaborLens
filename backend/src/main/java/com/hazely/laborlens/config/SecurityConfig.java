@@ -20,7 +20,9 @@ import java.util.List;
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class SecurityConfig {
     @Bean
-    public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(12); }
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
+    }
 
     @Bean
     public SecurityFilterChain security(HttpSecurity http, AuthService auth, RefreshCookie cookies) throws Exception {
@@ -33,23 +35,25 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/api/**", cors);
         return http.sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // APIs use bearer headers; refresh/logout additionally enforce an explicit Origin allowlist.
-                .csrf(AbstractHttpConfigurer::disable)
+        .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
                 .requestCache(AbstractHttpConfigurer::disable)
                 .cors(c -> c.configurationSource(source))
                 .authorizeHttpRequests(c -> c
-                        .requestMatchers("/", "/error").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
-                        .anyRequest().authenticated())
-                .exceptionHandling(c -> c.authenticationEntryPoint((request, response, error) -> {
-                    response.setStatus(401);
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"code\":\"UNAUTHENTICATED\",\"message\":\"Valid authentication is required.\",\"field\":null}");
-                }))
+                .requestMatchers("/", "/error").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login",
+                "/api/auth/refresh", "/api/auth/logout").permitAll()
+                .anyRequest().authenticated())
+                .exceptionHandling(c -> c.authenticationEntryPoint((request, response,
+                error) -> {
+            response.setStatus(401);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"code\":\"UNAUTHENTICATED\",\"message\":\"Valid authentication is required.\",\"field\":null}");
+        }))
                 // Instantiate inside the chain so the filter is not also registered as a servlet filter.
-                .addFilterBefore(new JwtFilter(auth), UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(new JwtFilter(auth), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 }

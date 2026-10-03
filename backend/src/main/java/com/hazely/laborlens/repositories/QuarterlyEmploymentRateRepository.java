@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 /** Queries only the fixed quarterly_employment_rate mapping. */
-public interface QuarterlyEmploymentRateRepository extends JpaRepository<QuarterlyEmploymentRate, Long>, JpaSpecificationExecutor<QuarterlyEmploymentRate> {}
+public interface QuarterlyEmploymentRateRepository extends JpaRepository<QuarterlyEmploymentRate, Long>, JpaSpecificationExecutor<QuarterlyEmploymentRate> {
+}

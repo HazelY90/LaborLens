@@ -25,6 +25,7 @@ class PolicyTests {
     private static final PdfSource SOURCE = PdfSource.STRATEGY_2025;
     private static final String QUOTE = "We will expand domestic skills training across the regions.";
     private static final byte[] PDF = "%PDF-1.7\nComplete test attachment\n%%EOF".getBytes(StandardCharsets.US_ASCII);
+
     @TempDir
     Path root;
 
@@ -33,9 +34,11 @@ class PolicyTests {
         var valid = policy(SOURCE.fileName(), 2025, 3, QUOTE);
         assertEquals(List.of(valid), PolicyCheck.validate(SOURCE, List.of(valid, valid)));
         for (var invalid : List.of(policy("wrong.pdf", 2025, 3, QUOTE),
-                policy(SOURCE.fileName(), 2024, 3, QUOTE), policy(SOURCE.fileName(), 2025, 0, QUOTE),
+                policy(SOURCE.fileName(), 2024, 3, QUOTE), policy(SOURCE.fileName(),
+                2025, 0, QUOTE),
                 policy(SOURCE.fileName(), 2025, 3, "Too short"))) {
-            assertThrows(IllegalArgumentException.class, () -> PolicyCheck.validate(SOURCE, List.of(invalid)));
+            assertThrows(IllegalArgumentException.class, () -> PolicyCheck.validate(SOURCE,
+                    List.of(invalid)));
         }
     }
 
@@ -66,7 +69,9 @@ class PolicyTests {
 
     @Test
     void rejectsTruncationMalformedOutputAndEmptyExtraction() throws Exception {
-        String[] replies = {"{broken", "{\"policies\":[]}", "{\"policies\":null}"};
+        String[] replies = {
+            "{broken", "{\"policies\":[]}", "{\"policies\":null}"
+        };
         for (int i = 0; i < replies.length; i++) {
             Path dir = Files.createDirectory(root.resolve("case-" + i));
             PolicyAi ai = ai(replies[i], "stop", "test-v1");
@@ -74,7 +79,8 @@ class PolicyTests {
         }
         Path dir = Files.createDirectory(root.resolve("truncated"));
         assertThrows(IllegalArgumentException.class,
-                () -> ai("{\"policies\":[]}", "length", "test-v1").extract(SOURCE, PDF, dir));
+                () -> ai("{\"policies\":[]}", "length", "test-v1").extract(SOURCE, PDF,
+                dir));
     }
 
     @Test

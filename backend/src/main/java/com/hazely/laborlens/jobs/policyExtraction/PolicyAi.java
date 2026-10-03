@@ -38,11 +38,12 @@ public class PolicyAi {
     private final String prompt;
 
     /** Maps the model's JSON envelope while keeping parsing inside this adapter. */
-    private record Output(List<PolicyDraft> policies) {}
+    private record Output(List<PolicyDraft> policies) {
+    }
 
     public PolicyAi(ObjectProvider<ChatModel> models,
-                    @Value("${app.jobs.pdf.timeout-seconds:600}") int timeout,
-                    @Value("${app.jobs.pdf.config-version:policy-pdf-v2}") String configVersion) {
+            @Value("${app.jobs.pdf.timeout-seconds:600}") int timeout,
+            @Value("${app.jobs.pdf.config-version:policy-pdf-v2}") String configVersion) {
         if (timeout < 1 || configVersion.isBlank()) {
             throw new IllegalArgumentException("Invalid policy extraction settings");
         }
@@ -77,7 +78,8 @@ public class PolicyAi {
         if (options instanceof OpenAiChatOptions openAi) {
             options = openAi.mutate().timeout(Duration.ofSeconds(timeout)).build();
         }
-        ChatResponse response = call(model, new Prompt(List.of(new SystemMessage(prompt), user), options));
+        ChatResponse response = call(model, new Prompt(List.of(new SystemMessage(prompt), user),
+                options));
         if (response == null || response.getResult() == null || response.hasToolCalls()) {
             throw new IllegalArgumentException("AI returned no usable policy output");
         }
@@ -97,7 +99,8 @@ public class PolicyAi {
         try {
             output = json.readValue(raw, Output.class);
         } catch (RuntimeException error) {
-            throw new IllegalArgumentException("AI output does not match the policy schema", error);
+            throw new IllegalArgumentException("AI output does not match the policy schema",
+                    error);
         }
         if (output == null) throw new IllegalArgumentException("AI returned no policy output");
         List<PolicyDraft> result = PolicyCheck.validate(source, output.policies());
@@ -116,7 +119,8 @@ public class PolicyAi {
             }
             return content;
         } catch (IOException error) {
-            throw new IllegalStateException("Cannot read policy configuration: " + name, error);
+            throw new IllegalStateException("Cannot read policy configuration: " + name,
+                    error);
         }
     }
 

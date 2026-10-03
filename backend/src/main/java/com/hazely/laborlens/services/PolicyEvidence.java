@@ -12,10 +12,13 @@ import java.io.IOException;
 public class PolicyEvidence {
     private final Path root;
     private final JsonMapper json = JsonMapper.builder().build();
-    public record Citation(String source, int page) {}
+    public record Citation(String source, int page) {
+    }
+
     public PolicyEvidence(@Value("${app.data.root:../data}") String root) {
         this.root = Path.of(root).toAbsolutePath().normalize();
     }
+
     public Map<Long, Citation> read(long run) {
         if (run < 1) return Map.of();
         try {

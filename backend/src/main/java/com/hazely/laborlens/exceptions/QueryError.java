@@ -4,11 +4,18 @@ package com.hazely.laborlens.exceptions;
 public class QueryError extends RuntimeException {
     private final String code;
     private final String field;
+
     public QueryError(String code, String field, String message) {
         super(message);
         this.code = code;
         this.field = field;
     }
-    public String getCode() { return code; }
-    public String getField() { return field; }
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getField() {
+        return field;
+    }
 }

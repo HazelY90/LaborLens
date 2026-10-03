@@ -58,7 +58,8 @@ public class JobFiles {
         Path dir = directory(Path.of("runs")).resolve(Long.toString(run));
         Files.createDirectory(dir);
         Files.write(dir.resolve(source.fileName()), input.bytes(), StandardOpenOption.CREATE_NEW);
-        properties(dir.resolve("input.properties"), Map.of("file", source.fileName(), "url", source.url(),
+        properties(dir.resolve("input.properties"), Map.of("file", source.fileName(), "url",
+                source.url(),
                 "checksum", input.checksum(), "process_version", version,
                 "size", Integer.toString(input.bytes().length)));
         return dir;

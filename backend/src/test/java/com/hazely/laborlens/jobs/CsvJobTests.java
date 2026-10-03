@@ -31,7 +31,8 @@ class CsvJobTests {
 
     @Test
     void preservesSnapshotsAndRunHistory() throws Exception {
-        var dataSource = new DriverManagerDataSource(mysql.getJdbcUrl(), mysql.getUsername(), mysql.getPassword());
+        var dataSource = new DriverManagerDataSource(mysql.getJdbcUrl(), mysql.getUsername(),
+                mysql.getPassword());
         Flyway.configure().dataSource(dataSource).locations("classpath:db/migration").load().migrate();
         var sql = new JdbcTemplate(dataSource);
         var store = new JobStore(dataSource);
@@ -64,13 +65,15 @@ class CsvJobTests {
         assertEquals(checksum, sql.queryForObject("SELECT checksum FROM source_file", String.class));
         prepare.run(CsvSource.ALF01, false);
         assertEquals(JobStatus.SUCCESS, job.importFile(CsvSource.ALF01, false).status());
-        assertEquals(20.0, sql.queryForObject("SELECT MIN(employment_rate_percent) FROM annual_employment_rate", Double.class));
+        assertEquals(20.0, sql.queryForObject("SELECT MIN(employment_rate_percent) FROM annual_employment_rate",
+                Double.class));
 
         // Reverting to an older successful input still requires replacing the current snapshot.
         Files.writeString(file, original);
         prepare.run(CsvSource.ALF01, false);
         assertEquals(JobStatus.SUCCESS, job.importFile(CsvSource.ALF01, false).status());
-        assertEquals(10.0, sql.queryForObject("SELECT MIN(employment_rate_percent) FROM annual_employment_rate", Double.class));
+        assertEquals(10.0, sql.queryForObject("SELECT MIN(employment_rate_percent) FROM annual_employment_rate",
+                Double.class));
 
         Files.writeString(file, original.replace(",%,10", ",%,invalid"));
         assertThrows(IllegalStateException.class, () -> job.importFile(CsvSource.ALF01, false));
@@ -87,11 +90,14 @@ class CsvJobTests {
             sql.execute("DROP TRIGGER reject_annual");
         }
         assertEquals(7L, sql.queryForObject("SELECT COUNT(*) FROM annual_employment_rate", Long.class));
-        assertEquals("FAILED", sql.queryForObject("SELECT status FROM job_run ORDER BY id DESC LIMIT 1", String.class));
-        assertEquals(0L, sql.queryForObject("SELECT COUNT(*) FROM job_run WHERE status = 'RUNNING'", Long.class));
+        assertEquals("FAILED", sql.queryForObject("SELECT status FROM job_run ORDER BY id DESC LIMIT 1",
+                String.class));
+        assertEquals(0L, sql.queryForObject("SELECT COUNT(*) FROM job_run WHERE status = 'RUNNING'",
+                Long.class));
 
         store.locked(CsvSource.ALF01, session -> {
-            assertThrows(IllegalStateException.class, () -> job.importFile(CsvSource.ALF01, false));
+            assertThrows(IllegalStateException.class, () -> job.importFile(CsvSource.ALF01,
+                    false));
             return null;
         });
     }

@@ -26,9 +26,9 @@ public class JwtTokens {
     private final long refreshSeconds;
 
     public JwtTokens(@Value("${app.auth.jwt-secret}") String secret,
-                     @Value("${app.auth.issuer:laborlens}") String issuer,
-                     @Value("${app.auth.access-seconds:1800}") long accessSeconds,
-                     @Value("${app.auth.refresh-seconds:604800}") long refreshSeconds) {
+            @Value("${app.auth.issuer:laborlens}") String issuer,
+            @Value("${app.auth.access-seconds:1800}") long accessSeconds,
+            @Value("${app.auth.refresh-seconds:604800}") long refreshSeconds) {
         byte[] key = secret.getBytes(StandardCharsets.UTF_8);
         if (key.length < 32 || issuer.isBlank() || accessSeconds <= 0 || refreshSeconds <= accessSeconds) {
             throw new IllegalStateException("JWT requires a secret of at least 32 UTF-8 bytes and valid lifetimes");
@@ -43,16 +43,25 @@ public class JwtTokens {
         this.accessSeconds = accessSeconds;
         this.refreshSeconds = refreshSeconds;
     }
-    public long accessSeconds() { return accessSeconds; }
-    public long refreshSeconds() { return refreshSeconds; }
+
+    public long accessSeconds() {
+        return accessSeconds;
+    }
+
+    public long refreshSeconds() {
+        return refreshSeconds;
+    }
+
     public String issue(User user, boolean isRefresh) {
         Instant now = Instant.now();
         var claims = JwtClaimsSet.builder().issuer(issuer).subject(user.getId().toString())
                 .issuedAt(now).expiresAt(now.plusSeconds(isRefresh ? refreshSeconds : accessSeconds))
                 .id(UUID.randomUUID().toString()).claim("token_type", isRefresh ? "refresh" : "access")
                 .claim("token_version", user.getTokenVersion()).build();
-        return encoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
+        return encoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(),
+                claims)).getTokenValue();
     }
+
     public Identity read(String token, boolean isRefresh) {
         try {
             if (token == null || token.length() > 8192) throw AuthError.unauthorized();

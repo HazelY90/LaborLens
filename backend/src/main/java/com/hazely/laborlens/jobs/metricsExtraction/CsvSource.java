@@ -25,7 +25,7 @@ public enum CsvSource implements SourceSpec {
     final String columns;
 
     CsvSource(String table, String statistic, String unit, String period,
-              List<String> dimensions, String columns) {
+            List<String> dimensions, String columns) {
         this.table = table;
         this.statistic = statistic;
         this.unit = unit;

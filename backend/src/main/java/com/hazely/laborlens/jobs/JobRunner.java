@@ -24,8 +24,8 @@ public class JobRunner implements ApplicationRunner {
     private final boolean isForce;
 
     public JobRunner(JobStore store, FileJob files, CsvJob csv, PdfJob pdf,
-                     @Value("${app.jobs.refresh:false}") boolean isRefresh,
-                     @Value("${app.jobs.force:false}") boolean isForce) {
+            @Value("${app.jobs.refresh:false}") boolean isRefresh,
+            @Value("${app.jobs.force:false}") boolean isForce) {
         this.store = store;
         this.files = files;
         this.csv = csv;
@@ -38,6 +38,7 @@ public class JobRunner implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         store.pipeline(session -> {
             log.info("Ingestion stage 1/3: prepare and register all source files");
+            // Finish registration before either extraction stage reads source metadata.
             files.runAll(isRefresh);
             log.info("Ingestion stage 2/3: import all four CSV files");
             csv.runAll(isForce);

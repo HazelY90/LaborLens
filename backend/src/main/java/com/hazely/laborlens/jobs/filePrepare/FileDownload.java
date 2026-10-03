@@ -29,7 +29,8 @@ public class FileDownload {
         this.client = client;
     }
 
-    public record Download(JobFiles.Input input, String url, String modified, String retrieved) {}
+    public record Download(JobFiles.Input input, String url, String modified, String retrieved) {
+    }
 
     public Download fetch(SourceSpec source) throws Exception {
         URI uri = URI.create(source.url());

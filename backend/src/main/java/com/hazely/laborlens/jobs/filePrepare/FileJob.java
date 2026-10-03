@@ -60,8 +60,10 @@ public class FileJob {
                 session.input(run, input.checksum());
                 Path artifact = files.archive(run, source, input, VERSION);
                 JobFiles.properties(artifact.resolve("acquisition.properties"), fetched == null
-                        ? Map.of("mode", "local") : Map.of("mode", "download", "url", fetched.url(),
-                        "last_modified", fetched.modified(), "retrieved_at", fetched.retrieved()));
+                        ? Map.of("mode", "local") : Map.of("mode", "download",
+                        "url", fetched.url(),
+                        "last_modified", fetched.modified(), "retrieved_at",
+                        fetched.retrieved()));
                 // Publish only validated bytes; registration can be retried against this file.
                 if (fetched != null) files.publish(source, input);
                 session.register(source, input.checksum(), run);

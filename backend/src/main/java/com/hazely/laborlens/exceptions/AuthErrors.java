@@ -17,26 +17,36 @@ import org.slf4j.LoggerFactory;
 public class AuthErrors {
     private static final Logger log = LoggerFactory.getLogger(AuthErrors.class);
     private final RefreshCookie cookies;
-    public AuthErrors(RefreshCookie cookies) { this.cookies = cookies; }
+
+    public AuthErrors(RefreshCookie cookies) {
+        this.cookies = cookies;
+    }
+
     @ExceptionHandler(AuthError.class)
     public ResponseEntity<ApiError> auth(AuthError error) {
         var response = ResponseEntity.status(error.getStatus()).cacheControl(CacheControl.noStore());
         if (error.getStatus() == 401) response.header(HttpHeaders.SET_COOKIE, cookies.clear());
         return response.body(new ApiError(error.getCode(), error.getMessage(), error.getField()));
     }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> validation(MethodArgumentNotValidException error) {
         var field = error.getBindingResult().getFieldError();
-        return ResponseEntity.badRequest().body(new ApiError("INVALID_REQUEST", "Invalid request field.", field == null ? null : field.getField()));
+        return ResponseEntity.badRequest().body(new ApiError("INVALID_REQUEST", "Invalid request field.",
+                field == null ? null : field.getField()));
     }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> json() {
-        return ResponseEntity.badRequest().body(new ApiError("INVALID_REQUEST", "A valid JSON body is required.", null));
+        return ResponseEntity.badRequest().body(new ApiError("INVALID_REQUEST", "A valid JSON body is required.",
+                null));
     }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> unexpected(Exception error) {
         // Database exceptions can contain user input; log only the exception type here.
         log.error("Authentication operation failed: {}", error.getClass().getSimpleName());
-        return ResponseEntity.internalServerError().body(new ApiError("INTERNAL_ERROR", "Unable to complete the request.", null));
+        return ResponseEntity.internalServerError().body(new ApiError("INTERNAL_ERROR", "Unable to complete the request.",
+                null));
     }
 }

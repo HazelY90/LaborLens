@@ -42,9 +42,9 @@ class JobStoreTests {
                 PolicyType.SKILLS_DEVELOPMENT, 1, "Expand domestic skills training.");
         assertThrows(java.io.IOException.class, () -> store.new Session(db)
                 .replacePolicies(pdf, 9, List.of(policy), 1, ids -> {
-                    assertEquals(List.of(42L), ids);
-                    throw new java.io.IOException("Simulated artifact failure");
-                }));
+            assertEquals(List.of(42L), ids);
+            throw new java.io.IOException("Simulated artifact failure");
+        }));
         verify(delete).setLong(1, 9);
         verify(db).rollback();
         verify(db, never()).commit();

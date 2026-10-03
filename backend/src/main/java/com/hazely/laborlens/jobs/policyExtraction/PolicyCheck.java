@@ -5,7 +5,8 @@ import java.util.*;
 
 /** Checks file and response structure; quoted evidence still requires source review. */
 public final class PolicyCheck {
-    private PolicyCheck() {}
+    private PolicyCheck() {
+    }
 
     /** Checks transport limits and the PDF signature without parsing document contents. */
     public static void validatePdf(byte[] pdf) {
@@ -36,6 +37,7 @@ public final class PolicyCheck {
             }
             // Keep evidence for review; no local text conversion or quote matching is performed.
             String key = policy.page() + "|" + policy.type() + "|" + normalize(policy.policy());
+            // Preserve the first occurrence and its evidence for each duplicate key.
             unique.putIfAbsent(key, policy);
         }
         return List.copyOf(unique.values());

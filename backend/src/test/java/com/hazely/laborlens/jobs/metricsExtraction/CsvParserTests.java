@@ -17,8 +17,12 @@ public class CsvParserTests {
     @Test
     void parsesLocalReferenceFiles() throws Exception {
         // These counts describe the checked-in fixtures, not production acceptance thresholds.
-        int[] expected = {2838, 756, 3423, 359};
-        int[] missing = {522, 0, 273, 201};
+        int[] expected = {
+            2838, 756, 3423, 359
+        };
+        int[] missing = {
+            522, 0, 273, 201
+        };
         for (CsvSource source : CsvSource.values()) {
             var result = parser.parse(source, Files.readAllBytes(Path.of("../data", source.path())));
             assertEquals(expected[source.ordinal()], result.rows().size(), source.name());
@@ -54,11 +58,14 @@ public class CsvParserTests {
     void rejectsInvalidMeasuresDimensionsAndPeriods() {
         for (String value : List.of("NaN", "Infinity", "-1", "101", "unknown", "0x1.0p0", "1e999")) {
             assertThrows(IllegalArgumentException.class,
-                    () -> parse(sample().replace(row(2019, "10"), row(2019, value))), value);
+                    () -> parse(sample().replace(row(2019, "10"), row(2019, value))),
+                    value);
         }
         for (String csv : List.of(sample().replace("Ireland", "Unknown"),
-                sample().replace("All ages", "15 - 74 years"), sample().replace(",%,", ",Thousand,"),
-                sample().replace("2019,", "2019Q1,"), sample().replace("STATISTIC,", "UNKNOWN,"),
+                sample().replace("All ages", "15 - 74 years"), sample().replace(",%,",
+                ",Thousand,"),
+                sample().replace("2019,", "2019Q1,"), sample().replace("STATISTIC,",
+                "UNKNOWN,"),
                 sample().replace("ALF01C01", "ALF01C99"))) {
             assertThrows(IllegalArgumentException.class, () -> parse(csv));
         }
@@ -73,7 +80,8 @@ public class CsvParserTests {
 
     @Test
     void rejectsIncompleteOrEmptySnapshots() {
-        assertThrows(IllegalArgumentException.class, () -> parse(sample().replace(row(2025, "10"), "")));
+        assertThrows(IllegalArgumentException.class, () -> parse(sample().replace(row(2025, "10"),
+                "")));
         assertThrows(IllegalArgumentException.class, () -> parse(sample().replace(",%,10", ",%,")));
     }
 

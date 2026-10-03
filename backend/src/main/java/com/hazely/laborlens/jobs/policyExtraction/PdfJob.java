@@ -38,23 +38,28 @@ public class PdfJob {
             JobStore.Source registered = session.source(source);
             if (registered == null) throw new IllegalStateException("Run file preparation before PDF processing");
             JobFiles.Input input = files.read(source);
-            long run = session.start(source, JobType.POLICY_EXTRACTION, registered, input.checksum(), version);
+            long run = session.start(source, JobType.POLICY_EXTRACTION, registered, input.checksum(),
+                    version);
             try {
                 var artifact = files.archive(run, source, input, version);
                 if (!registered.checksum().equals(input.checksum())) {
                     throw new IllegalStateException("Local PDF changed; run file preparation again");
                 }
-                if (!isForce && session.isCurrent(registered.id(), JobType.POLICY_EXTRACTION, input.checksum(), version)) {
+                if (!isForce && session.isCurrent(registered.id(), JobType.POLICY_EXTRACTION,
+                        input.checksum(), version)) {
                     session.finish(run, JobStatus.SKIPPED, null, null);
-                    return new JobOutcome(run, source.fileName(), JobStatus.SKIPPED, null);
+                    return new JobOutcome(run, source.fileName(), JobStatus.SKIPPED,
+                            null);
                 }
                 var policies = ai.extract(source, input.bytes(), artifact);
                 session.replacePolicies(source, registered.id(), policies, run, ids -> {
                     List<Map<String, Object>> evidence = new ArrayList<>();
                     for (int i = 0; i < ids.size(); i++) {
-                        evidence.add(Map.of("policy_id", ids.get(i), "policy", policies.get(i)));
+                        evidence.add(Map.of("policy_id", ids.get(i), "policy",
+                                policies.get(i)));
                     }
-                    Files.writeString(artifact.resolve("evidence.json"), json.writeValueAsString(evidence), StandardOpenOption.CREATE_NEW);
+                    Files.writeString(artifact.resolve("evidence.json"), json.writeValueAsString(evidence),
+                            StandardOpenOption.CREATE_NEW);
                 });
                 return new JobOutcome(run, source.fileName(), JobStatus.SUCCESS, (long) policies.size());
             } catch (Exception error) {

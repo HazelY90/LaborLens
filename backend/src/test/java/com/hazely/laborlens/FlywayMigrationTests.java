@@ -48,8 +48,10 @@ class FlywayMigrationTests {
                 assertRejected(db, annual, 1062);
                 assertRejected(db, annual.replace("2025", "2018"), 3819);
                 assertRejected(db, annual.replace("AGE_20_24", "AGE_25_54"), 3819);
-                assertRejected(db, annual.replace("'ALL', 'ALL'", "'ALL', 'NOT_STATED'"), 3819);
-                assertRejected(db, annual.replace("'ALL', 'ALL'", "'ALL', 'BELOW_PRIMARY'"), 3819);
+                assertRejected(db, annual.replace("'ALL', 'ALL'", "'ALL', 'NOT_STATED'"),
+                        3819);
+                assertRejected(db, annual.replace("'ALL', 'ALL'", "'ALL', 'BELOW_PRIMARY'"),
+                        3819);
                 assertRejected(db, annual.replace("'AGE_20_24'", "'all'"), 3819);
                 assertRejected(db, annual.replace(", 0)", ", 101)"), 3819);
                 assertRejected(db, annual.replace(", 0)", ", NULL)"), 1048);
@@ -70,7 +72,9 @@ class FlywayMigrationTests {
                 assertRejected(db, employed.replace(", 0)", ", -1)"), 3819);
                 assertRejected(db, employed.replace("OUTSIDE_EU_UK", "UNKNOWN"), 3819);
                 // Multiple downloaded PDF editions can target the same policy table.
-                for (String period : new String[]{"2024-2025", "2025-2028"}) {
+                for (String period : new String[]{
+                    "2024-2025", "2025-2028"
+                }) {
                     String file = "statement-of-strategy-" + period + ".pdf";
                     execute(db, "INSERT INTO source_file (file_name, table_name, download_url, download_path, checksum) "
                             + "VALUES ('" + file + "', 'policy', 'https://example.org/" + file
@@ -87,9 +91,11 @@ class FlywayMigrationTests {
                 assertRejected(db, policy.replace("ECONOMIC_MIGRATION", "UNKNOWN"), 3819);
                 assertRejected(db,
                         "INSERT INTO policy (period_start, period_end, policy, type, source_file_id) "
-                        + "VALUES (2025, 2028, 'Test commitment', 'ECONOMIC_MIGRATION', 0)", 1452);
+                        + "VALUES (2025, 2028, 'Test commitment', 'ECONOMIC_MIGRATION', 0)",
+                        1452);
                 assertRejected(db,
-                        "DELETE FROM source_file WHERE file_name = 'statement-of-strategy-2025-2028.pdf'", 1451);
+                        "DELETE FROM source_file WHERE file_name = 'statement-of-strategy-2025-2028.pdf'",
+                        1451);
             } finally {
                 db.rollback();
             }
@@ -120,13 +126,17 @@ class FlywayMigrationTests {
         execute(db, success);
         execute(db, success); // Forced runs retain separate history.
         assertRejected(db, success.replace("'SUCCESS'", "'RUNNING'"), 3819);
-        assertRejected(db, success.replace("'2026-09-29 00:01:00'", "'2026-09-28 00:00:00'"), 3819);
-        assertRejected(db, success.replace("id, file_name, checksum,", "0, file_name, checksum,"), 1452);
-        assertRejected(db, success.replace("id, file_name, checksum,", "id, file_name, 'bad',"), 3819);
+        assertRejected(db, success.replace("'2026-09-29 00:01:00'", "'2026-09-28 00:00:00'"),
+                3819);
+        assertRejected(db, success.replace("id, file_name, checksum,", "0, file_name, checksum,"),
+                1452);
+        assertRejected(db, success.replace("id, file_name, checksum,", "id, file_name, 'bad',"),
+                3819);
         execute(db, "UPDATE source_file SET checksum = REPEAT('b', 64) "
                 + "WHERE file_name = 'statement-of-strategy-2024-2025.pdf'");
         assertEquals(2, count(db, "SELECT COUNT(*) FROM job_run WHERE checksum = REPEAT('a', 64)"));
-        assertRejected(db, "DELETE FROM source_file WHERE file_name = 'statement-of-strategy-2024-2025.pdf'", 1451);
+        assertRejected(db, "DELETE FROM source_file WHERE file_name = 'statement-of-strategy-2024-2025.pdf'",
+                1451);
     }
 
     private static void assertRejected(Connection db, String sql, int code) {

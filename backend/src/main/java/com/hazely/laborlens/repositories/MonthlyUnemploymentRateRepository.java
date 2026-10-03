@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 /** Queries only the fixed monthly_unemployment_rate mapping. */
-public interface MonthlyUnemploymentRateRepository extends JpaRepository<MonthlyUnemploymentRate, Long>, JpaSpecificationExecutor<MonthlyUnemploymentRate> {}
+public interface MonthlyUnemploymentRateRepository extends JpaRepository<MonthlyUnemploymentRate, Long>, JpaSpecificationExecutor<MonthlyUnemploymentRate> {
+}

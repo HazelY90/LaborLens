@@ -39,7 +39,8 @@ class UserRepositoryTests {
             var user = new User("person@example.test", "Same name", new BCryptPasswordEncoder(4).encode("password123"));
             em.persist(user);
             em.persist(new User("other@example.test", "Same name", user.getPasswordHash()));
-            em.getTransaction().commit(); em.clear();
+            em.getTransaction().commit();
+            em.clear();
             assertTrue(repo.existsByEmail("PERSON@EXAMPLE.TEST"));
             assertThrows(org.springframework.dao.DataIntegrityViolationException.class, () -> sql.update(
                     "INSERT INTO users (email,username,password_hash,token_version,created_at) VALUES (?,?,?,0,NOW())",
@@ -47,7 +48,8 @@ class UserRepositoryTests {
             em.getTransaction().begin();
             var locked = repo.lockEmail("person@example.test").orElseThrow();
             locked.revoke();
-            em.getTransaction().commit(); em.clear();
+            em.getTransaction().commit();
+            em.clear();
             assertEquals(1, repo.findById(user.getId()).orElseThrow().getTokenVersion());
             em.getTransaction().begin();
             em.remove(repo.lockId(user.getId()).orElseThrow());
